@@ -41,7 +41,12 @@ local fuzzy_with_z_score_bias = function(opts)
       return ngram_highlighter(opts.ngram_len, prompt, display)
     end,
     scoring_function = function(_, prompt, _, entry)
-      local base_score = fuzzy_sorter:score(prompt, entry)
+      local base_score = fuzzy_sorter:score(
+        prompt,
+        entry,
+        function(val) return val end,
+        function() return -1 end
+      )
 
       if base_score == -1 then
         return -1
