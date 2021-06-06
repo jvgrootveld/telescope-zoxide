@@ -3,7 +3,7 @@
 An extension for [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) that allows you operate [zoxide](https://github.com/ajeetdsouza/zoxide) within Neovim.
 
 ## Requirements
-[zoxide](https://github.com/ajeetdsouza/zoxide) is required for using this plugin.
+[zoxide](https://github.com/ajeetdsouza/zoxide) is required to use this plugin.
 
 ## Installation
 
@@ -29,7 +29,7 @@ require'telescope'.load_extension('zoxide')
 With Telescope command
 
 ```vim
-:Telescope zoxide select
+:Telescope zoxide list
 ```
 
 In Lua
@@ -53,7 +53,7 @@ vim.api.nvim_set_keymap(
 | Action       | Description                           | Command executed |
 |--------------|---------------------------------------|------------------|
 | `<CR>`       | Change current directory to selection | `cd <path>`      |
-| `<C-s>`      | Open selection in a split.            | `split <path>`   |
-| `<C-v>`      | Open selection in a vertical split.   | `vsplit <path>`  |
-| `<C-e>`      | Open selection in current window.     | `edit <path>`    |
+| `<C-s>`      | Open selection in a split             | `split <path>`   |
+| `<C-v>`      | Open selection in a vertical split    | `vsplit <path>`  |
+| `<C-e>`      | Open selection in current window      | `edit <path>`    |
 
