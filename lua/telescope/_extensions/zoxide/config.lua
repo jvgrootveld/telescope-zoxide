@@ -30,45 +30,48 @@ config.get_config = function()
 end
 
 config.setup = function(user_config)
- local temp_config = {}
+  local temp_config = {}
 
- for key, value in pairs(default_config) do
-   -- Map everything except 'mappings'
-   if key ~= "mappings" then
-     temp_config[key] = utils.get_default(user_config[key], value)
-   end
- end
+  -- Map everything except 'mappings'
+  for key, value in pairs(default_config) do
+    if key ~= "mappings" then
+      temp_config[key] = utils.get_default(user_config[key], value)
+    end
+  end
 
- -- Map mappings
- local temp_mappings = {}
+  -- Map mappings
+  local temp_mappings = {}
 
- -- Copy defaults in temp mapping
- for map_key, map_value in pairs(default_config.mappings) do
-   for action_key, action_value in pairs(map_value) do
-     temp_mappings[map_key] = {
-       [action_key] = action_value
-     }
-   end
- end
+  -- Copy defaults in temp mapping
+  for map_key, map_value in pairs(default_config.mappings) do
+    for action_key, action_value in pairs(map_value) do
 
- -- Override mapping with user mappings
- user_config.mappings = user_config.mappings or {}
- for map_key, map_value in pairs(user_config.mappings) do
-   -- If user mapping is new, just set, else merge
-   if temp_mappings[map_key] == nil then
-     temp_mappings[map_key] = map_value
-   else
-     for action_key, action_value in pairs(map_value) do
-       temp_mappings[map_key][action_key] = action_value
-     end
-   end
- end
+      if temp_mappings[map_key] == nil then
+        temp_mappings[map_key] = {}
+      end
 
- -- Set mappings
- temp_config.mappings = temp_mappings
+      temp_mappings[map_key][action_key] = action_value
+    end
+  end
 
- -- Set new merged config
- current_config = temp_config
+  -- Override mapping with user mappings
+  user_config.mappings = user_config.mappings or {}
+  for map_key, map_value in pairs(user_config.mappings) do
+    -- If user mapping is new, just set, else merge
+    if temp_mappings[map_key] == nil then
+      temp_mappings[map_key] = map_value
+    else
+      for action_key, action_value in pairs(map_value) do
+        temp_mappings[map_key][action_key] = action_value
+      end
+    end
+  end
+
+  -- Set mappings
+  temp_config.mappings = temp_mappings
+
+  -- Set new merged config
+  current_config = temp_config
 end
 
 return config

@@ -38,6 +38,66 @@ In Lua
 require'telescope'.extensions.zoxide.list{}
 ```
 
+## Overridable config
+
+You can add, extend and update Telescope Zoxide config by calling the setup function after loading the plugin.
+
+You can add new mappings and extend default mappings.
+_(Note: The mapping with the key 'default' is the mapping invoked on pressing `<cr>`)_.
+Every keymapping must have an `action` function and supports the optional functions `before_action` and `after_action`.
+
+All action functions are called with the current `selection` object as parameter which contains the selected path and Zoxide score.
+
+Tip: Make use of the supplied `z_utils.create_basic_command` helper function to easily invoke a vim command for the selected path.
+
+### Example setup
+```lua
+local z_utils = require("telescope._extensions.zoxide.utils")
+
+require("telescope._extensions.zoxide.config").setup({
+  prompt_title = "[ Walking on the shoulders of TJ ]",
+  mappings = {
+    default = {
+      after_action = function(selection)
+        print("Update to (" .. selection.z_score .. ") " .. selection.path)
+      end
+    },
+    ["<C-s>"] = {
+      before_action = function(selection) print("before C-s") end,
+      action = function(selection)
+        vim.cmd("edit " .. selection.path)
+      end
+    },
+    ["<C-q>"] = { action = z_utils.create_basic_command("split") },
+  }
+})
+```
+
+
+### Default config
+```lua
+{
+  prompt_title = "[ Zoxide List ]",
+
+  -- Zoxide list command with score
+  list_command = "zoxide query -ls",
+  mappings = {
+    default = {
+      action = function(selection)
+        vim.cmd("cd " .. selection.path)
+      end,
+      after_action = function(selection)
+        print("Directory changed to " .. selection.path)
+      end
+    },
+    ["<C-s>"] = { action = z_utils.create_basic_command("split") },
+    ["<C-v>"] = { action = z_utils.create_basic_command("vsplit") },
+    ["<C-e>"] = { action = z_utils.create_basic_command("edit") },
+  }
+}
+```
+
+
 ## Example config: 
 
 ```lua

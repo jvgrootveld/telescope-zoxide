@@ -115,11 +115,13 @@ return function(opts)
     },
     sorter = fuzzy_with_z_score_bias(opts),
     attach_mappings = function(prompt_bufnr, map)
+      local mappings = z_config.get_config().mappings
+
       -- Set default mapping '<cr>'
-      actions.select_default:replace(create_mapping(prompt_bufnr, z_config.get_config().mappings.default))
+      actions.select_default:replace(create_mapping(prompt_bufnr, mappings.default))
 
       -- Add extra mappings
-      for mapping_key, mapping_config in pairs(z_config.get_config().mappings) do
+      for mapping_key, mapping_config in pairs(mappings) do
         if mapping_key ~= "default" then
           map_both(map, mapping_key, create_mapping(prompt_bufnr, mapping_config))
         end
