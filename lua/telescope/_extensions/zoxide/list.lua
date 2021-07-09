@@ -4,7 +4,6 @@ local finders = require('telescope.finders')
 local pickers = require('telescope.pickers')
 local sorters = require('telescope.sorters')
 local utils = require('telescope.utils')
-local z_config = require("telescope._extensions.zoxide.config")
 
 local map_both = function(map, keys, func)
       map("i", keys, func)
@@ -102,12 +101,13 @@ end
 return function(opts)
   opts = opts or {}
 
-  local cmd = z_config.config.list_command
+  local z_config = require("telescope._extensions.zoxide.config")
+  local cmd = z_config.get_config().list_command
 
   opts.cmd = utils.get_default(opts.cmd, {vim.o.shell, "-c", cmd})
 
   pickers.new(opts, {
-    prompt_title = z_config.config.prompt_title,
+    prompt_title = z_config.get_config().prompt_title,
 
     finder = finders.new_table {
       results = utils.get_os_command_output(opts.cmd),
@@ -116,12 +116,11 @@ return function(opts)
     sorter = fuzzy_with_z_score_bias(opts),
     attach_mappings = function(prompt_bufnr, map)
       -- Set default mapping '<cr>'
-      actions.select_default:replace(create_mapping(prompt_bufnr, z_config.config.mappings.default))
+      actions.select_default:replace(create_mapping(prompt_bufnr, z_config.get_config().mappings.default))
 
       -- Add extra mappings
-      for mapping_key, mapping_config in pairs(z_config.config.mappings) do
+      for mapping_key, mapping_config in pairs(z_config.get_config().mappings) do
         if mapping_key ~= "default" then
-          print("Map key: " .. mapping_key)
           map_both(map, mapping_key, create_mapping(prompt_bufnr, mapping_config))
         end
       end

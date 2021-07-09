@@ -3,7 +3,7 @@ local z_utils = require("telescope._extensions.zoxide.utils")
 
 local config = {}
 
-config.defaults = {
+local default_config = {
   prompt_title = "[ Zoxide List ]",
 
   -- Zoxide list command with score
@@ -23,10 +23,16 @@ config.defaults = {
   }
 }
 
+local current_config = default_config
+
+config.get_config = function()
+  return current_config
+end
+
 config.setup = function(user_config)
  local temp_config = {}
 
- for key, value in pairs(config.defaults) do
+ for key, value in pairs(default_config) do
    -- Map everything except 'mappings'
    if key ~= "mappings" then
      temp_config[key] = utils.get_default(user_config[key], value)
@@ -37,7 +43,7 @@ config.setup = function(user_config)
  local temp_mappings = {}
 
  -- Copy defaults in temp mapping
- for map_key, map_value in pairs(config.defaults.mappings) do
+ for map_key, map_value in pairs(default_config.mappings) do
    for action_key, action_value in pairs(map_value) do
      temp_mappings[map_key] = {
        [action_key] = action_value
@@ -62,9 +68,7 @@ config.setup = function(user_config)
  temp_config.mappings = temp_mappings
 
  -- Set new merged config
- config.config = temp_config
+ current_config = temp_config
 end
-
-config.config = config.defaults
 
 return config
