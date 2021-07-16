@@ -3,14 +3,12 @@ local action_state = require('telescope.actions.state')
 local finders = require('telescope.finders')
 local pickers = require('telescope.pickers')
 local sorters = require('telescope.sorters')
-local utils = require'telescope.utils'
+local utils = require('telescope.utils')
 
 local map_both = function(map, keys, func)
       map("i", keys, func)
       map("n", keys, func)
 end
-
-local command = "zoxide query -l"
 
 -- Copied unexported highlighter from telescope/sorters.lua
 local ngram_highlighter = function(ngram_len, prompt, display)
@@ -81,26 +79,35 @@ local entry_maker = function(item)
   }
 end
 
-local open_with_command = function (prompt_bufnr, cmd)
-  local selection = action_state.get_selected_entry()
+local create_mapping = function(prompt_bufnr, mapping_config)
+  return function()
+    local selection = action_state.get_selected_entry()
 
-  actions.close(prompt_bufnr)
-  vim.cmd(cmd .. " " .. selection.path)
+    if mapping_config.before_action ~= nil then
+      mapping_config.before_action(selection)
+    end
+
+    -- Close Telescope window
+    actions.close(prompt_bufnr)
+
+    mapping_config.action(selection)
+
+    if mapping_config.after_action ~= nil then
+      mapping_config.after_action(selection)
+    end
+  end
 end
 
 return function(opts)
   opts = opts or {}
 
-  local cmd = command
-
-  if opts.show_score ~= false then
-    cmd = cmd .. "s"
-  end
+  local z_config = require("telescope._extensions.zoxide.config")
+  local cmd = z_config.get_config().list_command
 
   opts.cmd = utils.get_default(opts.cmd, {vim.o.shell, "-c", cmd})
 
   pickers.new(opts, {
-    prompt_title = "[ Zoxide List ]",
+    prompt_title = z_config.get_config().prompt_title,
 
     finder = finders.new_table {
       results = utils.get_os_command_output(opts.cmd),
@@ -108,16 +115,17 @@ return function(opts)
     },
     sorter = fuzzy_with_z_score_bias(opts),
     attach_mappings = function(prompt_bufnr, map)
-      actions.select_default:replace(function()
-        local selection = action_state.get_selected_entry()
-        actions.close(prompt_bufnr)
-        vim.cmd("cd " .. selection.path)
-        print("Directory changed to " .. selection.path)
-      end)
+      local mappings = z_config.get_config().mappings
 
-      map_both(map, "<C-s>", function() open_with_command(prompt_bufnr, "split") end)
-      map_both(map, "<C-v>", function() open_with_command(prompt_bufnr, "vsplit") end)
-      map_both(map, "<C-e>", function() open_with_command(prompt_bufnr, "edit") end)
+      -- Set default mapping '<cr>'
+      actions.select_default:replace(create_mapping(prompt_bufnr, mappings.default))
+
+      -- Add extra mappings
+      for mapping_key, mapping_config in pairs(mappings) do
+        if mapping_key ~= "default" then
+          map_both(map, mapping_key, create_mapping(prompt_bufnr, mapping_config))
+        end
+      end
 
       return true
     end,
