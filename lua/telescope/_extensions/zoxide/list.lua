@@ -103,8 +103,11 @@ return function(opts)
 
   local z_config = require("telescope._extensions.zoxide.config")
   local cmd = z_config.get_config().list_command
-
-  opts.cmd = utils.get_default(opts.cmd, {vim.o.shell, "-c", cmd})
+  local shell_arg = "-c"
+  if vim.o.shell == "cmd.exe" then
+    shell_arg = "/c"
+  end
+  opts.cmd = utils.get_default(opts.cmd, {vim.o.shell, shell_arg, cmd})
 
   pickers.new(opts, {
     prompt_title = z_config.get_config().prompt_title,
