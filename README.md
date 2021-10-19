@@ -3,6 +3,7 @@
 An extension for [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) that allows you operate [zoxide](https://github.com/ajeetdsouza/zoxide) within Neovim.
 
 ## Requirements
+
 [zoxide](https://github.com/ajeetdsouza/zoxide) is required to use this plugin.
 
 ## Installation
@@ -45,12 +46,14 @@ You can add, extend and update Telescope Zoxide config by calling the setup func
 You can add new mappings and extend default mappings.
 _(Note: The mapping with the key 'default' is the mapping invoked on pressing `<cr>`)_.
 Every keymapping must have an `action` function and supports the optional functions `before_action` and `after_action`.
+If the action is a telescope picker, you can also pass in a boolean value `keepinsert` to open it in insert mode.
 
 All action functions are called with the current `selection` object as parameter which contains the selected path and Zoxide score.
 
 Tip: Make use of the supplied `z_utils.create_basic_command` helper function to easily invoke a vim command for the selected path.
 
 ### Example setup
+
 ```lua
 local z_utils = require("telescope._extensions.zoxide.utils")
 
@@ -73,8 +76,8 @@ require("telescope._extensions.zoxide.config").setup({
 })
 ```
 
-
 ### Default config
+
 ```lua
 {
   prompt_title = "[ Zoxide List ]",
@@ -93,12 +96,23 @@ require("telescope._extensions.zoxide.config").setup({
     ["<C-s>"] = { action = z_utils.create_basic_command("split") },
     ["<C-v>"] = { action = z_utils.create_basic_command("vsplit") },
     ["<C-e>"] = { action = z_utils.create_basic_command("edit") },
+    ["<C-b>"] = {
+      keepinsert = true,
+      action = function(selection)
+        builtin.file_browser({ cwd = selection.path })
+      end
+    },
+    ["<C-f>"] = {
+      keepinsert = true,
+      action = function(selection)
+        builtin.find_files({ cwd = selection.path })
+      end
+    }
   }
 }
 ```
 
-
-## Example config: 
+## Example config:
 
 ```lua
 vim.api.nvim_set_keymap(
@@ -110,10 +124,12 @@ vim.api.nvim_set_keymap(
 ```
 
 ## Default mappings:
-| Action       | Description                           | Command executed |
-|--------------|---------------------------------------|------------------|
-| `<CR>`       | Change current directory to selection | `cd <path>`      |
-| `<C-s>`      | Open selection in a split             | `split <path>`   |
-| `<C-v>`      | Open selection in a vertical split    | `vsplit <path>`  |
-| `<C-e>`      | Open selection in current window      | `edit <path>`    |
 
+| Action  | Description                                          | Command executed                                 |
+| ------- | ---------------------------------------------------- | ------------------------------------------------ |
+| `<CR>`  | Change current directory to selection                | `cd <path>`                                      |
+| `<C-s>` | Open selection in a split                            | `split <path>`                                   |
+| `<C-v>` | Open selection in a vertical split                   | `vsplit <path>`                                  |
+| `<C-e>` | Open selection in current window                     | `edit <path>`                                    |
+| `<C-b>` | Open selection in telescope's `builtin.file_browser` | `builtin.file_browser({ cwd = selection.path })` |
+| `<C-f>` | Open selection in telescope's `builtin.find_files`   | `builtin.find_files({ cwd = selection.path })`   |
