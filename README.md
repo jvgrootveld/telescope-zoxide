@@ -46,7 +46,8 @@ You can add, extend and update Telescope Zoxide config by calling the setup func
 You can add new mappings and extend default mappings.
 _(Note: The mapping with the key 'default' is the mapping invoked on pressing `<cr>`)_.
 Every keymapping must have an `action` function and supports the optional functions `before_action` and `after_action`.
-If the action is a telescope picker, you can also pass in a boolean value `keepinsert` to open it in insert mode.
+
+Tip: If the action is a telescope picker, you should also set `keepinsert = true` to open it in insert mode. Else you can't directly type into the next telescope picker.
 
 All action functions are called with the current `selection` object as parameter which contains the selected path and Zoxide score.
 
