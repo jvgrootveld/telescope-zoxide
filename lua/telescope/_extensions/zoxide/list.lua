@@ -88,7 +88,7 @@ local create_mapping = function(prompt_bufnr, mapping_config)
     end
 
     -- Close Telescope window
-    actions.close(prompt_bufnr)
+    actions._close(prompt_bufnr, mapping_config.keepinsert or false)
 
     mapping_config.action(selection)
 
