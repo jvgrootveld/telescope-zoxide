@@ -107,7 +107,7 @@ return function(opts)
   if vim.o.shell == "cmd.exe" then
     shell_arg = "/c"
   end
-  opts.cmd = utils.get_default(opts.cmd, {vim.o.shell, shell_arg, cmd})
+  opts.cmd = vim.F.if_nil(opts.cmd, {vim.o.shell, shell_arg, cmd})
 
   pickers.new(opts, {
     prompt_title = z_config.get_config().prompt_title,

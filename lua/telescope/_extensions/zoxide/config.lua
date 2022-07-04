@@ -48,7 +48,7 @@ config.setup = function(user_config)
   -- Map everything except 'mappings'
   for key, value in pairs(default_config) do
     if key ~= "mappings" then
-      temp_config[key] = utils.get_default(user_config[key], value)
+      temp_config[key] = vim.F.if_nil(user_config[key], value)
     end
   end
 
