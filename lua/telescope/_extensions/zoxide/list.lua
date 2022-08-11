@@ -62,7 +62,7 @@ end
 local entry_maker = function(item)
   local trimmed = string.gsub(item, '^%s*(.-)%s*$', '%1')
   local item_path = string.gsub(trimmed, '^[^%s]* (.*)$', '%1')
-  local score = string.gsub(trimmed, '^([^%s]*) .*$', '%1')
+  local score = tonumber(string.gsub(trimmed, '^([^%s]*) .*$', '%1'))
 
   return {
     value = item_path,
@@ -76,8 +76,6 @@ end
 local create_mapping = function(prompt_bufnr, mapping_config)
   return function()
     local selection = action_state.get_selected_entry()
-    print("selection:", vim.inspect(selection))
-
     if mapping_config.before_action ~= nil then
       mapping_config.before_action(selection)
     end
