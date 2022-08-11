@@ -62,7 +62,7 @@ end
 local entry_maker = function(item)
   local trimmed = string.gsub(item, '^%s*(.-)%s*$', '%1')
   local item_path = string.gsub(trimmed, '^[^%s]* (.*)$', '%1')
-  local score = tonumber(string.gsub(trimmed, '^([^%s]*) .*$', '%1'))
+  local score = tonumber(string.gsub(trimmed, '^([^%s]*) .*$', '%1'), 10)
 
   return {
     value = item_path,
