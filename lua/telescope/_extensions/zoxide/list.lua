@@ -60,20 +60,14 @@ local fuzzy_with_z_score_bias = function(opts)
 end
 
 local entry_maker = function(item)
-  local items = vim.split(string.gsub(item, '^%s*(.-)%s*$', '%1'), " ")
-  local score = 0
-  local item_path = item
-
-  if #items > 1 then
-    score = tonumber(items[1])
-    item_path = items[2]
-  end
+  local trimmed = string.gsub(item, '^%s*(.-)%s*$', '%1')
+  local item_path = string.gsub(trimmed, '^[^%s]* (.*)$', '%1')
+  local score = string.gsub(trimmed, '^([^%s]*) .*$', '%1')
 
   return {
-    value = item,
+    value = item_path,
     ordinal = item_path,
-    display = item,
-
+    display = item_path,
     z_score = score,
     path = item_path
   }
@@ -82,6 +76,7 @@ end
 local create_mapping = function(prompt_bufnr, mapping_config)
   return function()
     local selection = action_state.get_selected_entry()
+    print("selection:", vim.inspect(selection))
 
     if mapping_config.before_action ~= nil then
       mapping_config.before_action(selection)
