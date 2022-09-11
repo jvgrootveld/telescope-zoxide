@@ -111,6 +111,7 @@ return function(opts)
 
   pickers.new(opts, {
     prompt_title = z_config.get_config().prompt_title,
+    previewer = require("telescope.previewers.buffer_previewer").cat.new(opts),
 
     finder = finders.new_table {
       results = utils.get_os_command_output(opts.cmd),
