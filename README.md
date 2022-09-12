@@ -15,33 +15,39 @@ Plug 'nvim-telescope/telescope.nvim'
 Plug 'jvgrootveld/telescope-zoxide'
 ```
 
-## Setup
+## Configuration
 
-You can setup the extension by adding the following to your config:
-
-```lua
-require'telescope'.load_extension('zoxide')
-```
-
-## Available functions:
-
-### List
-
-With Telescope command
-
-```vim
-:Telescope zoxide list
-```
-
-In Lua
+You can add, extend and update Telescope Zoxide config by using [Telescope's default configuration mechanism for extensions](https://github.com/nvim-telescope/telescope.nvim#telescope-setup-structure).
+An example config:
 
 ```lua
-require'telescope'.extensions.zoxide.list{}
+-- Useful for easily creating commands
+local z_utils = require("telescope._extensions.zoxide.utils")
+
+require('telescope').setup{
+  -- (other Telescope configuration...)
+  extensions = {
+    zoxide = {
+      prompt_title = "[ Walking on the shoulders of TJ ]",
+      mappings = {
+        default = {
+          after_action = function(selection)
+            print("Update to (" .. selection.z_score .. ") " .. selection.path)
+          end
+        },
+        ["<C-s>"] = {
+          before_action = function(selection) print("before C-s") end,
+          action = function(selection)
+            vim.cmd("edit " .. selection.path)
+          end
+        },
+        -- Opens the selected entry in a new split
+        ["<C-q>"] = { action = z_utils.create_basic_command("split") },
+      },
+    }
+  }
+}
 ```
-
-## Overridable config
-
-You can add, extend and update Telescope Zoxide config by calling the setup function after loading the plugin.
 
 You can add new mappings and extend default mappings.
 _(Note: The mapping with the key 'default' is the mapping invoked on pressing `<cr>`)_.
@@ -53,31 +59,73 @@ All action functions are called with the current `selection` object as parameter
 
 Tip: Make use of the supplied `z_utils.create_basic_command` helper function to easily invoke a vim command for the selected path.
 
-### Example setup
+## Loading the extension
+
+You can then load the extension by adding the following after your call to telescope's own `setup()` function:
 
 ```lua
-local z_utils = require("telescope._extensions.zoxide.utils")
-
-require("telescope._extensions.zoxide.config").setup({
-  prompt_title = "[ Walking on the shoulders of TJ ]",
-  mappings = {
-    default = {
-      after_action = function(selection)
-        print("Update to (" .. selection.z_score .. ") " .. selection.path)
-      end
-    },
-    ["<C-s>"] = {
-      before_action = function(selection) print("before C-s") end,
-      action = function(selection)
-        vim.cmd("edit " .. selection.path)
-      end
-    },
-    ["<C-q>"] = { action = z_utils.create_basic_command("split") },
-  }
-})
+require("telescope").load_extension('zoxide')
 ```
 
-### Default config
+Loading the extension will allow you to use the following functionality:
+
+### List
+
+With Telescope command:
+
+```vim
+:Telescope zoxide list
+```
+
+In Lua:
+
+```lua
+require("telescope").extensions.zoxide.list({picker_opts})
+```
+
+You can also bind the function to a key:
+
+```lua
+vim.keymap.set("n", "<leader>cd", require("telescope").extensions.zoxide.list)
+```
+
+## Full example
+
+```lua
+local t = require("telescope")
+local z_utils = require("telescope._extensions.zoxide.utils")
+
+-- Configure the extension
+t.setup({
+  extensions = {
+    zoxide = {
+      prompt_title = "[ Walking on the shoulders of TJ ]",
+      mappings = {
+        default = {
+          after_action = function(selection)
+            print("Update to (" .. selection.z_score .. ") " .. selection.path)
+          end
+        },
+        ["<C-s>"] = {
+          before_action = function(selection) print("before C-s") end,
+          action = function(selection)
+            vim.cmd("edit " .. selection.path)
+          end
+        },
+        ["<C-q>"] = { action = z_utils.create_basic_command("split") },
+      },
+    },
+  },
+})
+
+-- Load the extension
+t.load_extension('zoxide')
+
+-- Add a mapping
+vim.keymap.set("n", "<leader>cd", t.extensions.zoxide.list)
+```
+
+## Default config
 
 ```lua
 {
@@ -113,18 +161,7 @@ require("telescope._extensions.zoxide.config").setup({
 }
 ```
 
-## Example config:
-
-```lua
-vim.api.nvim_set_keymap(
-	"n",
-	"<leader>cd",
-	":lua require'telescope'.extensions.zoxide.list{}<CR>",
-	{noremap = true, silent = true}
-)
-```
-
-## Default mappings:
+## Default mappings
 
 | Action  | Description                                          | Command executed                                 |
 | ------- | ---------------------------------------------------- | ------------------------------------------------ |
