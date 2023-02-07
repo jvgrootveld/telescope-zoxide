@@ -12,7 +12,7 @@ local default_config = {
   mappings = {
     default = {
       action = function(selection)
-        vim.cmd("cd " .. selection.path)
+        vim.cmd.cd(selection.path)
       end,
       after_action = function(selection)
         print("Directory changed to " .. selection.path)

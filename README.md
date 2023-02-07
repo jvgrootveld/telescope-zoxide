@@ -38,7 +38,7 @@ require('telescope').setup{
         ["<C-s>"] = {
           before_action = function(selection) print("before C-s") end,
           action = function(selection)
-            vim.cmd("edit " .. selection.path)
+            vim.cmd.edit(selection.path)
           end
         },
         -- Opens the selected entry in a new split
@@ -109,7 +109,7 @@ t.setup({
         ["<C-s>"] = {
           before_action = function(selection) print("before C-s") end,
           action = function(selection)
-            vim.cmd("edit " .. selection.path)
+            vim.cmd.edit(selection.path)
           end
         },
         ["<C-q>"] = { action = z_utils.create_basic_command("split") },
@@ -136,7 +136,7 @@ vim.keymap.set("n", "<leader>cd", t.extensions.zoxide.list)
   mappings = {
     default = {
       action = function(selection)
-        vim.cmd("cd " .. selection.path)
+        vim.cmd.edit(selection.path)
       end,
       after_action = function(selection)
         print("Directory changed to " .. selection.path)
