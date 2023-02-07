@@ -32,7 +32,12 @@ local default_config = {
       action = function(selection)
         builtin.find_files({ cwd = selection.path })
       end
-    }
+    },
+    ["<C-t>"] = {
+      action = function(selection)
+        vim.cmd.tcd(selection.path)
+      end
+    },
   }
 }
 
