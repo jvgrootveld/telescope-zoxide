@@ -12,7 +12,7 @@ local default_config = {
   mappings = {
     default = {
       action = function(selection)
-        vim.cmd("cd " .. selection.path)
+        vim.cmd.cd(selection.path)
       end,
       after_action = function(selection)
         print("Directory changed to " .. selection.path)
@@ -32,7 +32,12 @@ local default_config = {
       action = function(selection)
         builtin.find_files({ cwd = selection.path })
       end
-    }
+    },
+    ["<C-t>"] = {
+      action = function(selection)
+        vim.cmd.tcd(selection.path)
+      end
+    },
   }
 }
 

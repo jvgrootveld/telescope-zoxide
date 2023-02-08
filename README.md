@@ -38,7 +38,7 @@ require('telescope').setup{
         ["<C-s>"] = {
           before_action = function(selection) print("before C-s") end,
           action = function(selection)
-            vim.cmd("edit " .. selection.path)
+            vim.cmd.edit(selection.path)
           end
         },
         -- Opens the selected entry in a new split
@@ -109,7 +109,7 @@ t.setup({
         ["<C-s>"] = {
           before_action = function(selection) print("before C-s") end,
           action = function(selection)
-            vim.cmd("edit " .. selection.path)
+            vim.cmd.edit(selection.path)
           end
         },
         ["<C-q>"] = { action = z_utils.create_basic_command("split") },
@@ -136,7 +136,7 @@ vim.keymap.set("n", "<leader>cd", t.extensions.zoxide.list)
   mappings = {
     default = {
       action = function(selection)
-        vim.cmd("cd " .. selection.path)
+        vim.cmd.edit(selection.path)
       end,
       after_action = function(selection)
         print("Directory changed to " .. selection.path)
@@ -156,7 +156,12 @@ vim.keymap.set("n", "<leader>cd", t.extensions.zoxide.list)
       action = function(selection)
         builtin.find_files({ cwd = selection.path })
       end
-    }
+    },
+    ["<C-t>"] = {
+      action = function(selection)
+        vim.cmd.tcd(selection.path)
+      end
+    },
   }
 }
 ```
@@ -166,6 +171,7 @@ vim.keymap.set("n", "<leader>cd", t.extensions.zoxide.list)
 | Action  | Description                                          | Command executed                                 |
 | ------- | ---------------------------------------------------- | ------------------------------------------------ |
 | `<CR>`  | Change current directory to selection                | `cd <path>`                                      |
+| `<C-t>` | Change current tab's directory to selection          | `tcd <path>`                                     |
 | `<C-s>` | Open selection in a split                            | `split <path>`                                   |
 | `<C-v>` | Open selection in a vertical split                   | `vsplit <path>`                                  |
 | `<C-e>` | Open selection in current window                     | `edit <path>`                                    |
