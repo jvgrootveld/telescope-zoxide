@@ -130,17 +130,16 @@ vim.keymap.set("n", "<leader>cd", t.extensions.zoxide.list)
 ```lua
 {
   prompt_title = "[ Zoxide List ]",
-
   -- Zoxide list command with score
   list_command = "zoxide query -ls",
+  -- Print "directory changed to..." messages
+  verbose = true,
   mappings = {
     default = {
       action = function(selection)
         vim.cmd.edit(selection.path)
       end,
-      after_action = function(selection)
-        print("Directory changed to " .. selection.path)
-      end
+      after_action = z_utils.print_directory_changed(),
     },
     ["<C-s>"] = { action = z_utils.create_basic_command("split") },
     ["<C-v>"] = { action = z_utils.create_basic_command("vsplit") },
@@ -161,6 +160,7 @@ vim.keymap.set("n", "<leader>cd", t.extensions.zoxide.list)
       action = function(selection)
         vim.cmd.tcd(selection.path)
       end
+      after_action = z_utils.print_directory_changed(),
     },
   }
 }
