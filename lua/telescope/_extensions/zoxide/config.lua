@@ -6,7 +6,6 @@ local config = {}
 
 local default_config = {
   prompt_title = "[ Zoxide List ]",
-
   -- Zoxide list command with score
   list_command = "zoxide query -ls",
   mappings = {
@@ -15,25 +14,26 @@ local default_config = {
         vim.cmd.cd(selection.path)
       end,
       after_action = function(selection)
-        print("Directory changed to " .. selection.path)
+        vim.notify("Directory changed to " .. selection.path)
+        -- print("Directory changed to " .. selection.path)
       end
     },
-    ["<C-s>"] = { action = z_utils.create_basic_command("split") },
-    ["<C-v>"] = { action = z_utils.create_basic_command("vsplit") },
-    ["<C-e>"] = { action = z_utils.create_basic_command("edit") },
-    ["<C-b>"] = {
+        ["<C-s>"] = { action = z_utils.create_basic_command("split") },
+        ["<C-v>"] = { action = z_utils.create_basic_command("vsplit") },
+        ["<C-e>"] = { action = z_utils.create_basic_command("edit") },
+        ["<C-b>"] = {
       keepinsert = true,
       action = function(selection)
         builtin.file_browser({ cwd = selection.path })
       end
     },
-    ["<C-f>"] = {
+        ["<C-f>"] = {
       keepinsert = true,
       action = function(selection)
         builtin.find_files({ cwd = selection.path })
       end
     },
-    ["<C-t>"] = {
+        ["<C-t>"] = {
       action = function(selection)
         vim.cmd.tcd(selection.path)
       end
@@ -63,7 +63,6 @@ config.setup = function(user_config)
   -- Copy defaults in temp mapping
   for map_key, map_value in pairs(default_config.mappings) do
     for action_key, action_value in pairs(map_value) do
-
       if temp_mappings[map_key] == nil then
         temp_mappings[map_key] = {}
       end
