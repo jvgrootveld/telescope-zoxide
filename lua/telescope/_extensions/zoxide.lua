@@ -4,6 +4,7 @@ if not has_telescope then
 end
 
 return telescope.register_extension {
+  setup = require("telescope._extensions.zoxide.config").setup,
   exports = {
     list = require("telescope._extensions.zoxide.list")
   }
