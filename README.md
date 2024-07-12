@@ -133,6 +133,8 @@ vim.keymap.set("n", "<leader>cd", t.extensions.zoxide.list)
 
   replace_home_with_tilde = true,
 
+  previewer = true,
+
   -- Zoxide list command with score
   list_command = "zoxide query -ls",
   mappings = {

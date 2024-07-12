@@ -3,6 +3,7 @@ local action_state = require('telescope.actions.state')
 local finders = require('telescope.finders')
 local pickers = require('telescope.pickers')
 local sorters = require('telescope.sorters')
+local previewers = require("telescope.previewers")
 local utils = require('telescope.utils')
 
 local z_config = require("telescope._extensions.zoxide.config")
@@ -121,6 +122,7 @@ return function(opts)
       entry_maker = entry_maker
     },
     sorter = fuzzy_with_z_score_bias(opts),
+    previewer = z_config.get_config().previewer and previewers.vim_buffer_cat.new(opts) or nil,
     attach_mappings = function(prompt_bufnr, map)
       local mappings = z_config.get_config().mappings
 

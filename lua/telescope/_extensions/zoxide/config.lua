@@ -9,6 +9,8 @@ local default_config = {
 
   replace_home_with_tilde = true,
 
+  previewer = true,
+
   -- Zoxide list command with score
   list_command = "zoxide query -ls",
   mappings = {
