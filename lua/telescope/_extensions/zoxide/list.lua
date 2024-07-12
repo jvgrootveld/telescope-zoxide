@@ -5,6 +5,8 @@ local pickers = require('telescope.pickers')
 local sorters = require('telescope.sorters')
 local utils = require('telescope.utils')
 
+local z_config = require("telescope._extensions.zoxide.config")
+
 local map_both = function(map, keys, func)
       map("i", keys, func)
       map("n", keys, func)
@@ -64,10 +66,20 @@ local entry_maker = function(item)
   local item_path = string.gsub(trimmed, '^[^%s]* (.*)$', '%1')
   local score = tonumber(string.gsub(trimmed, '^([^%s]*) .*$', '%1'), 10)
 
+  local replace_home_with_tilde = z_config.get_config().replace_home_with_tilde
+
+  local path_display = function(path)
+    local home = vim.loop.os_homedir()
+    if replace_home_with_tilde and vim.startswith(path, home) then
+      return "~/" .. require("plenary.path"):new(path):make_relative(home)
+    end
+    return path
+  end
+
   return {
     value = item_path,
     ordinal = item_path,
-    display = item_path,
+    display = path_display(item_path),
     z_score = score,
     path = item_path
   }
@@ -94,7 +106,6 @@ end
 return function(opts)
   opts = opts or {}
 
-  local z_config = require("telescope._extensions.zoxide.config")
   local cmd = z_config.get_config().list_command
   local shell_arg = "-c"
   if vim.o.shell == "cmd.exe" then
