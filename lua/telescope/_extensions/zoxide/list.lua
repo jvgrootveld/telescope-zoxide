@@ -4,7 +4,10 @@ local finders = require('telescope.finders')
 local pickers = require('telescope.pickers')
 local sorters = require('telescope.sorters')
 local previewers = require("telescope.previewers")
+local entry_display = require('telescope.pickers.entry_display')
 local utils = require('telescope.utils')
+
+local get_status = require("telescope.state").get_status
 
 local z_config = require("telescope._extensions.zoxide.config")
 
@@ -67,20 +70,48 @@ local entry_maker = function(item)
   local item_path = string.gsub(trimmed, '^[^%s]* (.*)$', '%1')
   local score = tonumber(string.gsub(trimmed, '^([^%s]*) .*$', '%1'), 10)
 
-  local replace_home_with_tilde = z_config.get_config().replace_home_with_tilde
-
-  local path_display = function(path)
+  local transform_path = function(path)
+    -- replace home directory with ~
     local home = vim.loop.os_homedir()
-    if replace_home_with_tilde and vim.startswith(path, home) then
-      return "~/" .. require("plenary.path"):new(path):make_relative(home)
+    if z_config.get_config().replace_home_with_tilde and home and vim.startswith(path, home) then
+      path = "~/" .. require("plenary.path"):new(path):make_relative(home)
+    end
+    -- truncate
+    if z_config.get_config().truncate then
+      -- copy from: https://github.com/nvim-telescope/telescope.nvim/blob/bfcc7d5c6f12209139f175e6123a7b7de6d9c18a/lua/telescope/utils.lua#L198
+      local calc_result_length = function(truncate_len)
+        local status = get_status(vim.api.nvim_get_current_buf())
+        local len = vim.api.nvim_win_get_width(status.layout.results.winid) - status.picker.selection_caret:len() - 2
+        return type(truncate_len) == "number" and len - truncate_len or len
+      end
+      local truncate_len = nil
+      path = require("plenary.strings").truncate(path, calc_result_length(truncate_len), nil, -1)
     end
     return path
+  end
+
+  local transformed_path = transform_path(item_path)
+  local tail = utils.path_tail(item_path)
+
+  local displayer = entry_display.create({
+    separator = "",
+    items = {
+      { width = #transformed_path - #tail },
+      { remaining = true },
+    },
+  })
+
+  local make_display = function()
+    return displayer({
+      { transformed_path:sub(1, #transformed_path - #tail), "Comment" },
+      tail,
+    })
   end
 
   return {
     value = item_path,
     ordinal = item_path,
-    display = path_display(item_path),
+    display = z_config.get_config().filename_highlight and make_display or transformed_path,
     z_score = score,
     path = item_path
   }

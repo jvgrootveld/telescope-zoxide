@@ -130,9 +130,9 @@ vim.keymap.set("n", "<leader>cd", t.extensions.zoxide.list)
 ```lua
 {
   prompt_title = "[ Zoxide List ]",
-
   replace_home_with_tilde = true,
-
+  truncate = true,
+  filename_highlight = true,
   previewer = true,
 
   -- Zoxide list command with score
