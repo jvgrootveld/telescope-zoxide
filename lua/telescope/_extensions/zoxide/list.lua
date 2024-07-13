@@ -7,8 +7,6 @@ local previewers = require("telescope.previewers")
 local entry_display = require('telescope.pickers.entry_display')
 local utils = require('telescope.utils')
 
-local get_status = require("telescope.state").get_status
-
 local z_config = require("telescope._extensions.zoxide.config")
 
 local map_both = function(map, keys, func)
@@ -75,17 +73,6 @@ local entry_maker = function(item)
     local home = vim.loop.os_homedir()
     if z_config.get_config().replace_home_with_tilde and home and vim.startswith(path, home) then
       path = "~/" .. require("plenary.path"):new(path):make_relative(home)
-    end
-    -- truncate
-    if z_config.get_config().truncate then
-      -- copy from: https://github.com/nvim-telescope/telescope.nvim/blob/bfcc7d5c6f12209139f175e6123a7b7de6d9c18a/lua/telescope/utils.lua#L198
-      local calc_result_length = function(truncate_len)
-        local status = get_status(vim.api.nvim_get_current_buf())
-        local len = vim.api.nvim_win_get_width(status.layout.results.winid) - status.picker.selection_caret:len() - 2
-        return type(truncate_len) == "number" and len - truncate_len or len
-      end
-      local truncate_len = nil
-      path = require("plenary.strings").truncate(path, calc_result_length(truncate_len), nil, -1)
     end
     return path
   end
