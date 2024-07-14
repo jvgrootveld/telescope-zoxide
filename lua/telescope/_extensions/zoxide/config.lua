@@ -1,14 +1,50 @@
+local Path = require("plenary.path")
 local builtin = require("telescope.builtin")
 local utils = require('telescope.utils')
+local previewers = require("telescope.previewers")
 local z_utils = require("telescope._extensions.zoxide.utils")
+
+local truncate = require("plenary.strings").truncate
+local get_status = require("telescope.state").get_status
 
 local config = {}
 
 local default_config = {
   prompt_title = "[ Zoxide List ]",
-  replace_home_with_tilde = true,
-  filename_highlight = true,
-  previewer = true,
+  -- set to `nil` to disable previewer
+  previewer = previewers.vim_buffer_cat.new,
+  show_score = true,
+  -- see `:help telescope.defaults.path_display`
+  path_display = function(opts, path)
+    local transformed_path = vim.trim(path)
+    -- replace home with ~
+    local home = vim.loop.os_homedir()
+    if home and vim.startswith(path, home) then
+      transformed_path = "~/" .. Path:new(path):make_relative(home)
+    end
+    -- truncate
+    -- copy from: https://github.com/nvim-telescope/telescope.nvim/blob/bfcc7d5c6f12209139f175e6123a7b7de6d9c18a/lua/telescope/utils.lua#L198
+    local calc_result_length = function(truncate_len)
+      local status = get_status(vim.api.nvim_get_current_buf())
+      local len = vim.api.nvim_win_get_width(status.layout.results.winid) - status.picker.selection_caret:len() - 2
+      return type(truncate_len) == "number" and len - truncate_len or len
+    end
+    local truncate_len = nil
+    if opts.__length == nil then
+      opts.__length = calc_result_length(truncate_len)
+    end
+    if opts.__prefix == nil then
+      opts.__prefix = 0
+    end
+    transformed_path = truncate(transformed_path, opts.__length - opts.__prefix, nil, -1)
+    -- filename highlighting
+    local tail = utils.path_tail(path)
+    local path_style = {
+      { { 0, #transformed_path - #tail }, "Comment" },
+      -- { { #transformed_path - #tail, #transformed_path }, "Constant" },
+    }
+    return transformed_path, path_style
+  end,
 
   -- Zoxide list command with score
   list_command = "zoxide query -ls",

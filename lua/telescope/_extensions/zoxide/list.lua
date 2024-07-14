@@ -3,7 +3,6 @@ local action_state = require('telescope.actions.state')
 local finders = require('telescope.finders')
 local pickers = require('telescope.pickers')
 local sorters = require('telescope.sorters')
-local previewers = require("telescope.previewers")
 local entry_display = require('telescope.pickers.entry_display')
 local utils = require('telescope.utils')
 
@@ -63,45 +62,60 @@ local fuzzy_with_z_score_bias = function(opts)
   }
 end
 
-local entry_maker = function(item)
-  local trimmed = string.gsub(item, '^%s*(.-)%s*$', '%1')
-  local item_path = string.gsub(trimmed, '^[^%s]* (.*)$', '%1')
-  local score = tonumber(string.gsub(trimmed, '^([^%s]*) .*$', '%1'), 10)
+local entry_maker = function(opts)
+  opts = opts or {}
+  return function(item)
+    local trimmed = string.gsub(item, '^%s*(.-)%s*$', '%1')
+    local item_path = string.gsub(trimmed, '^[^%s]* (.*)$', '%1')
+    local score = tonumber(string.gsub(trimmed, '^([^%s]*) .*$', '%1'), 10)
 
-  local transform_path = function(path)
-    -- replace home directory with ~
-    local home = vim.loop.os_homedir()
-    if z_config.get_config().replace_home_with_tilde and home and vim.startswith(path, home) then
-      path = "~/" .. require("plenary.path"):new(path):make_relative(home)
-    end
-    return path
-  end
+    local display_path, path_style = utils.transform_path(opts, item_path)
 
-  local transformed_path = transform_path(item_path)
-  local tail = utils.path_tail(item_path)
-
-  local displayer = entry_display.create({
-    separator = "",
-    items = {
-      { width = #transformed_path - #tail },
+    local display_items = {
       { remaining = true },
-    },
-  })
+    }
 
-  local make_display = function()
-    return displayer({
-      { transformed_path:sub(1, #transformed_path - #tail), "Comment" },
-      tail,
+    local show_score = z_config.get_config().show_score
+    if show_score then
+      table.insert(display_items, 1, { width = 7, right_justify = true })
+    end
+
+    local displayer = entry_display.create({
+      separator = " ",
+      items = display_items,
     })
-  end
 
-  return {
-    value = item_path,
-    ordinal = item_path,
-    display = z_config.get_config().filename_highlight and make_display or transformed_path,
-    z_score = score,
-    path = item_path
-  }
+    local make_display = function()
+      if show_score then
+        return displayer {
+          { ("%.2f"):format(score), "TelescopeResultsNumber" },
+          {
+            display_path,
+            function()
+              return path_style
+            end,
+          },
+        }
+      else
+        return displayer {
+          {
+            display_path,
+            function()
+              return path_style
+            end,
+          },
+        }
+      end
+    end
+
+    return {
+      value = item_path,
+      ordinal = item_path,
+      display = make_display,
+      z_score = score,
+      path = item_path
+    }
+  end
 end
 
 local create_mapping = function(prompt_bufnr, mapping_config)
@@ -137,10 +151,11 @@ return function(opts)
 
     finder = finders.new_table {
       results = utils.get_os_command_output(opts.cmd),
-      entry_maker = entry_maker
+      entry_maker = entry_maker(opts)
     },
     sorter = fuzzy_with_z_score_bias(opts),
-    previewer = z_config.get_config().previewer and previewers.vim_buffer_cat.new(opts) or nil,
+    previewer = z_config.get_config().previewer and z_config.get_config().previewer(opts) or nil,
+    path_display = z_config.get_config().path_display,
     attach_mappings = function(prompt_bufnr, map)
       local mappings = z_config.get_config().mappings
 
