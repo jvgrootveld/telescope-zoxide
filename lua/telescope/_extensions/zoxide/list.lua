@@ -69,12 +69,9 @@ local entry_maker = function(opts)
     local item_path = string.gsub(trimmed, '^[^%s]* (.*)$', '%1')
     local score = tonumber(string.gsub(trimmed, '^([^%s]*) .*$', '%1'), 10)
 
-    local display_path, path_style = utils.transform_path(opts, item_path)
-
     local display_items = {
       { remaining = true },
     }
-
     local show_score = z_config.get_config().show_score
     if show_score then
       table.insert(display_items, 1, { width = 7, right_justify = true })
@@ -86,6 +83,7 @@ local entry_maker = function(opts)
     })
 
     local make_display = function()
+      local display_path, path_style = utils.transform_path(opts, item_path)
       if show_score then
         return displayer {
           { ("%.2f"):format(score), "TelescopeResultsNumber" },
