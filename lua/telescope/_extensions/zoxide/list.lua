@@ -3,6 +3,8 @@ local action_state = require('telescope.actions.state')
 local finders = require('telescope.finders')
 local pickers = require('telescope.pickers')
 local sorters = require('telescope.sorters')
+local previewers = require("telescope.previewers")
+local from_entry = require("telescope.from_entry")
 local entry_display = require('telescope.pickers.entry_display')
 local utils = require('telescope.utils')
 
@@ -64,6 +66,7 @@ end
 
 local entry_maker = function(opts)
   opts = opts or {}
+
   return function(item)
     local trimmed = string.gsub(item, '^%s*(.-)%s*$', '%1')
     local item_path = string.gsub(trimmed, '^[^%s]* (.*)$', '%1')
@@ -72,9 +75,12 @@ local entry_maker = function(opts)
     local display_items = {
       { remaining = true },
     }
+
     local show_score = z_config.get_config().show_score
+    local score_width = 0
     if show_score then
-      table.insert(display_items, 1, { width = 7, right_justify = true })
+      score_width = 7
+      table.insert(display_items, 1, { width = score_width, right_justify = true })
     end
 
     local displayer = entry_display.create({
@@ -83,6 +89,7 @@ local entry_maker = function(opts)
     })
 
     local make_display = function()
+      opts.__prefix = score_width
       local display_path, path_style = utils.transform_path(opts, item_path)
       if show_score then
         return displayer {
@@ -115,6 +122,51 @@ local entry_maker = function(opts)
     }
   end
 end
+
+local tree_previewer = previewers.new_termopen_previewer({
+  title = "Tree Preview",
+  get_command = function(entry)
+    local p = from_entry.path(entry, true, false)
+    if p == nil or p == "" then
+      return
+    end
+    local command
+    local ignore_glob = ".DS_Store|.git|.svn|.idea|.vscode|node_modules"
+    if vim.fn.executable("eza") == 1 then
+      command = {
+        "eza",
+        "--all",
+        "--level=2",
+        "--group-directories-first",
+        "--ignore-glob=" .. ignore_glob,
+        "--git-ignore",
+        "--tree",
+        "--color=always",
+        "--color-scale",
+        "all",
+        "--icons=always",
+        "--long",
+        "--time-style=iso",
+        "--git",
+        "--no-permissions",
+        "--no-user",
+      }
+    else
+      command = { "tree", "-a", "-L", "2", "-I", ignore_glob, "-C", "--dirsfirst" }
+    end
+    return utils.flatten({ command, "--", utils.path_expand(p) })
+  end,
+  scroll_fn = function(self, direction)
+    if not self.state then
+      return
+    end
+    local input = vim.api.nvim_replace_termcodes(direction > 0 and "<C-e>" or "<C-y>", true, false, true)
+    local count = math.abs(direction)
+    vim.api.nvim_win_call(vim.fn.bufwinid(self.state.termopen_bufnr), function()
+      vim.cmd([[normal! ]] .. count .. input)
+    end)
+  end,
+})
 
 local create_mapping = function(prompt_bufnr, mapping_config)
   return function()
@@ -152,8 +204,8 @@ return function(opts)
       entry_maker = entry_maker(opts)
     },
     sorter = fuzzy_with_z_score_bias(opts),
-    previewer = z_config.get_config().previewer and z_config.get_config().previewer(opts) or nil,
     path_display = z_config.get_config().path_display,
+    previewer = z_config.get_config().use_default_previewer and tree_previewer or nil,
     attach_mappings = function(prompt_bufnr, map)
       local mappings = z_config.get_config().mappings
 
