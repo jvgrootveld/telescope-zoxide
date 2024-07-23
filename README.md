@@ -164,9 +164,6 @@ vim.keymap.set("n", "<leader>cd", t.extensions.zoxide.list)
     },
   },
 
-  -- Set to false to disable default terminal tree previewer using `eza`/`tree`
-  -- You can also use your own previewer via `require("telescope").extensions.zoxide.list({ previewer = previewers.vim_buffer_cat.new({}) })`
-  use_default_previewer = true,
   show_score = true,
   -- See `:help telescope.defaults.path_display`
   path_display = function(opts, path)
@@ -177,7 +174,6 @@ vim.keymap.set("n", "<leader>cd", t.extensions.zoxide.list)
       transformed_path = "~/" .. Path:new(path):make_relative(home)
     end
     -- Truncate
-    -- Copied from: https://github.com/nvim-telescope/telescope.nvim/blob/bfcc7d5c6f12209139f175e6123a7b7de6d9c18a/lua/telescope/utils.lua#L198
     local calc_result_length = function(truncate_len)
       local status = get_status(vim.api.nvim_get_current_buf())
       local len = vim.api.nvim_win_get_width(status.layout.results.winid) - status.picker.selection_caret:len() - 2
@@ -199,6 +195,52 @@ vim.keymap.set("n", "<leader>cd", t.extensions.zoxide.list)
     }
     return transformed_path, path_style
   end,
+
+  -- Terminal previewer using `eza`/`tree`, set to nil to disable
+  previewer =  previewers.new_termopen_previewer({
+    title = "Tree Preview",
+    get_command = function(entry)
+      local p = from_entry.path(entry, true, false)
+      if p == nil or p == "" then
+        return
+      end
+      local command
+      local ignore_glob = ".DS_Store|.git|.svn|.idea|.vscode|node_modules"
+      if vim.fn.executable("eza") == 1 then
+        command = {
+          "eza",
+          "--all",
+          "--level=2",
+          "--group-directories-first",
+          "--ignore-glob=" .. ignore_glob,
+          "--git-ignore",
+          "--tree",
+          "--color=always",
+          "--color-scale",
+          "all",
+          "--icons=always",
+          "--long",
+          "--time-style=iso",
+          "--git",
+          "--no-permissions",
+          "--no-user",
+        }
+      else
+        command = { "tree", "-a", "-L", "2", "-I", ignore_glob, "-C", "--dirsfirst" }
+      end
+      return utils.flatten({ command, "--", utils.path_expand(p) })
+    end,
+    scroll_fn = function(self, direction)
+      if not self.state then
+        return
+      end
+      local input = vim.api.nvim_replace_termcodes(direction > 0 and "<C-e>" or "<C-y>", true, false, true)
+      local count = math.abs(direction)
+      vim.api.nvim_win_call(vim.fn.bufwinid(self.state.termopen_bufnr), function()
+        vim.cmd([[normal! ]] .. count .. input)
+      end)
+    end,
+  }),
 }
 ```
 

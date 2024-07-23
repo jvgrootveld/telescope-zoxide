@@ -3,8 +3,6 @@ local action_state = require('telescope.actions.state')
 local finders = require('telescope.finders')
 local pickers = require('telescope.pickers')
 local sorters = require('telescope.sorters')
-local previewers = require("telescope.previewers")
-local from_entry = require("telescope.from_entry")
 local entry_display = require('telescope.pickers.entry_display')
 local utils = require('telescope.utils')
 
@@ -123,51 +121,6 @@ local entry_maker = function(opts)
   end
 end
 
-local tree_previewer = previewers.new_termopen_previewer({
-  title = "Tree Preview",
-  get_command = function(entry)
-    local p = from_entry.path(entry, true, false)
-    if p == nil or p == "" then
-      return
-    end
-    local command
-    local ignore_glob = ".DS_Store|.git|.svn|.idea|.vscode|node_modules"
-    if vim.fn.executable("eza") == 1 then
-      command = {
-        "eza",
-        "--all",
-        "--level=2",
-        "--group-directories-first",
-        "--ignore-glob=" .. ignore_glob,
-        "--git-ignore",
-        "--tree",
-        "--color=always",
-        "--color-scale",
-        "all",
-        "--icons=always",
-        "--long",
-        "--time-style=iso",
-        "--git",
-        "--no-permissions",
-        "--no-user",
-      }
-    else
-      command = { "tree", "-a", "-L", "2", "-I", ignore_glob, "-C", "--dirsfirst" }
-    end
-    return utils.flatten({ command, "--", utils.path_expand(p) })
-  end,
-  scroll_fn = function(self, direction)
-    if not self.state then
-      return
-    end
-    local input = vim.api.nvim_replace_termcodes(direction > 0 and "<C-e>" or "<C-y>", true, false, true)
-    local count = math.abs(direction)
-    vim.api.nvim_win_call(vim.fn.bufwinid(self.state.termopen_bufnr), function()
-      vim.cmd([[normal! ]] .. count .. input)
-    end)
-  end,
-})
-
 local create_mapping = function(prompt_bufnr, mapping_config)
   return function()
     local selection = action_state.get_selected_entry()
@@ -205,7 +158,7 @@ return function(opts)
     },
     sorter = fuzzy_with_z_score_bias(opts),
     path_display = z_config.get_config().path_display,
-    previewer = z_config.get_config().use_default_previewer and tree_previewer or nil,
+    previewer = z_config.get_config().previewer,
     attach_mappings = function(prompt_bufnr, map)
       local mappings = z_config.get_config().mappings
 
