@@ -78,7 +78,7 @@ local default_config = {
     return transformed_path, path_style
   end,
 
-  -- Terminal previewer using `eza`/`tree`, set to nil to disable
+  -- Terminal previewer using `eza`/`tree`
   previewer =  previewers.new_termopen_previewer({
     title = "Tree Preview",
     get_command = function(entry)
