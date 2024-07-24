@@ -196,7 +196,7 @@ vim.keymap.set("n", "<leader>cd", t.extensions.zoxide.list)
     return transformed_path, path_style
   end,
 
-  -- Terminal previewer using `eza`/`tree`
+  -- Terminal previewer using `eza`/`tree`, can be disabled via `previewer = false`
   previewer =  previewers.new_termopen_previewer({
     title = "Tree Preview",
     get_command = function(entry)
