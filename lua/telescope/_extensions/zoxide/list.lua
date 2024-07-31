@@ -148,6 +148,7 @@ return function(opts)
     shell_arg = "/c"
   end
   opts.cmd = vim.F.if_nil(opts.cmd, {vim.o.shell, shell_arg, cmd})
+  opts.path_display = vim.F.if_nil(opts.path_display, z_config.get_config().path_display)
 
   pickers.new(opts, {
     prompt_title = z_config.get_config().prompt_title,
@@ -157,7 +158,6 @@ return function(opts)
       entry_maker = entry_maker(opts)
     },
     sorter = fuzzy_with_z_score_bias(opts),
-    path_display = z_config.get_config().path_display,
     previewer = z_config.get_config().previewer,
     attach_mappings = function(prompt_bufnr, map)
       local mappings = z_config.get_config().mappings

@@ -51,7 +51,7 @@ local default_config = {
   path_display = function(opts, path)
     local transformed_path = vim.trim(path)
     -- Replace home with ~
-    local home = vim.loop.os_homedir()
+    local home = vim.uv.os_homedir()
     if home and vim.startswith(path, home) then
       transformed_path = "~/" .. Path:new(path):make_relative(home)
     end
@@ -73,7 +73,7 @@ local default_config = {
     local tail = utils.path_tail(path)
     local path_style = {
       { { 0, #transformed_path - #tail }, "Comment" },
-      -- { { #transformed_path - #tail, #transformed_path }, "Constant" },
+      -- { { #transformed_path - #tail, #transformed_path }, "TelescopeResultsIdentifier" },
     }
     return transformed_path, path_style
   end,
