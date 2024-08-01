@@ -15,7 +15,6 @@ local default_config = {
       end,
       after_action = function(selection)
         vim.notify("Directory changed to " .. selection.path)
-        -- print("Directory changed to " .. selection.path)
       end
     },
         ["<C-s>"] = { action = z_utils.create_basic_command("split") },
