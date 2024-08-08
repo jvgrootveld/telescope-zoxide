@@ -3,7 +3,10 @@ local action_state = require('telescope.actions.state')
 local finders = require('telescope.finders')
 local pickers = require('telescope.pickers')
 local sorters = require('telescope.sorters')
+local entry_display = require('telescope.pickers.entry_display')
 local utils = require('telescope.utils')
+
+local z_config = require("telescope._extensions.zoxide.config")
 
 local map_both = function(map, keys, func)
       map("i", keys, func)
@@ -59,18 +62,63 @@ local fuzzy_with_z_score_bias = function(opts)
   }
 end
 
-local entry_maker = function(item)
-  local trimmed = string.gsub(item, '^%s*(.-)%s*$', '%1')
-  local item_path = string.gsub(trimmed, '^[^%s]* (.*)$', '%1')
-  local score = tonumber(string.gsub(trimmed, '^([^%s]*) .*$', '%1'), 10)
+local entry_maker = function(opts)
+  opts = opts or {}
 
-  return {
-    value = item_path,
-    ordinal = item_path,
-    display = item_path,
-    z_score = score,
-    path = item_path
-  }
+  return function(item)
+    local trimmed = string.gsub(item, '^%s*(.-)%s*$', '%1')
+    local item_path = string.gsub(trimmed, '^[^%s]* (.*)$', '%1')
+    local score = tonumber(string.gsub(trimmed, '^([^%s]*) .*$', '%1'), 10)
+
+    local display_items = {
+      { remaining = true },
+    }
+
+    local show_score = z_config.get_config().show_score
+    local score_width = 0
+    if show_score then
+      score_width = 7
+      table.insert(display_items, 1, { width = score_width, right_justify = true })
+    end
+
+    local displayer = entry_display.create({
+      separator = " ",
+      items = display_items,
+    })
+
+    local make_display = function()
+      opts.__prefix = score_width
+      local display_path, path_style = utils.transform_path(opts, item_path)
+      if show_score then
+        return displayer {
+          { ("%.2f"):format(score), "TelescopeResultsNumber" },
+          {
+            display_path,
+            function()
+              return path_style
+            end,
+          },
+        }
+      else
+        return displayer {
+          {
+            display_path,
+            function()
+              return path_style
+            end,
+          },
+        }
+      end
+    end
+
+    return {
+      value = item_path,
+      ordinal = item_path,
+      display = make_display,
+      z_score = score,
+      path = item_path
+    }
+  end
 end
 
 local create_mapping = function(prompt_bufnr, mapping_config)
@@ -94,13 +142,13 @@ end
 return function(opts)
   opts = opts or {}
 
-  local z_config = require("telescope._extensions.zoxide.config")
   local cmd = z_config.get_config().list_command
   local shell_arg = "-c"
   if vim.o.shell == "cmd.exe" then
     shell_arg = "/c"
   end
   opts.cmd = vim.F.if_nil(opts.cmd, {vim.o.shell, shell_arg, cmd})
+  opts.path_display = vim.F.if_nil(opts.path_display, z_config.get_config().path_display)
 
   pickers.new(opts, {
     prompt_title = z_config.get_config().prompt_title,
@@ -108,9 +156,10 @@ return function(opts)
 
     finder = finders.new_table {
       results = utils.get_os_command_output(opts.cmd),
-      entry_maker = entry_maker
+      entry_maker = entry_maker(opts)
     },
     sorter = fuzzy_with_z_score_bias(opts),
+    previewer = z_config.get_config().previewer,
     attach_mappings = function(prompt_bufnr, map)
       local mappings = z_config.get_config().mappings
 
