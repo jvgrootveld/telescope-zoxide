@@ -1,6 +1,11 @@
 local builtin = require("telescope.builtin")
 local utils = require('telescope.utils')
+local previewers = require("telescope.previewers")
+local from_entry = require("telescope.from_entry")
 local z_utils = require("telescope._extensions.zoxide.utils")
+
+local truncate = require("plenary.strings").truncate
+local get_status = require("telescope.state").get_status
 
 local config = {}
 
@@ -38,7 +43,83 @@ local default_config = {
         vim.cmd.tcd(selection.path)
       end
     },
-  }
+  },
+
+  show_score = true,
+  -- See `:help telescope.defaults.path_display`
+  path_display = function(opts, path)
+    local transformed_path = vim.trim(path)
+    -- Replace home with ~
+    local home = (vim.uv or vim.loop).os_homedir()
+    transformed_path = home and transformed_path:gsub("^" .. vim.pesc(home), "~") or transformed_path
+    -- Truncate
+    local calc_result_length = function(truncate_len)
+      local status = get_status(vim.api.nvim_get_current_buf())
+      local len = vim.api.nvim_win_get_width(status.layout.results.winid) - status.picker.selection_caret:len() - 2
+      return type(truncate_len) == "number" and len - truncate_len or len
+    end
+    local truncate_len = nil
+    if opts.__length == nil then
+      opts.__length = calc_result_length(truncate_len)
+    end
+    if opts.__prefix == nil then
+      opts.__prefix = 0
+    end
+    transformed_path = truncate(transformed_path, opts.__length - opts.__prefix, nil, -1)
+    -- Filename highlighting
+    local tail = utils.path_tail(path)
+    local path_style = {
+      { { 0, #transformed_path - #tail }, "Comment" },
+      -- { { #transformed_path - #tail, #transformed_path }, "TelescopeResultsIdentifier" },
+    }
+    return transformed_path, path_style
+  end,
+
+  -- Terminal previewer using `eza`/`tree`, can be disabled via `previewer = false`
+  previewer =  previewers.new_termopen_previewer({
+    title = "Tree Preview",
+    get_command = function(entry)
+      local p = from_entry.path(entry, true, false)
+      if p == nil or p == "" then
+        return
+      end
+      local command
+      local ignore_glob = ".DS_Store|.git|.svn|.idea|.vscode|node_modules"
+      if vim.fn.executable("eza") == 1 then
+        command = {
+          "eza",
+          "--all",
+          "--level=2",
+          "--group-directories-first",
+          "--ignore-glob=" .. ignore_glob,
+          "--git-ignore",
+          "--tree",
+          "--color=always",
+          "--color-scale",
+          "all",
+          "--icons=always",
+          "--long",
+          "--time-style=iso",
+          "--git",
+          "--no-permissions",
+          "--no-user",
+        }
+      else
+        command = { "tree", "-a", "-L", "2", "-I", ignore_glob, "-C", "--dirsfirst" }
+      end
+      return utils.flatten({ command, "--", utils.path_expand(p) })
+    end,
+    scroll_fn = function(self, direction)
+      if not self.state then
+        return
+      end
+      local input = vim.api.nvim_replace_termcodes(direction > 0 and "<C-e>" or "<C-y>", true, false, true)
+      local count = math.abs(direction)
+      vim.api.nvim_win_call(vim.fn.bufwinid(self.state.termopen_bufnr), function()
+        vim.cmd([[normal! ]] .. count .. input)
+      end)
+    end,
+  }),
 }
 
 local current_config = default_config
