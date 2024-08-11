@@ -169,10 +169,8 @@ vim.keymap.set("n", "<leader>cd", t.extensions.zoxide.list)
   path_display = function(opts, path)
     local transformed_path = vim.trim(path)
     -- Replace home with ~
-    local home = vim.uv.os_homedir()
-    if home and vim.startswith(path, home) then
-      transformed_path = "~/" .. Path:new(path):make_relative(home)
-    end
+    local home = (vim.uv or vim.loop).os_homedir()
+    transformed_path = home and transformed_path:gsub("^" .. vim.pesc(home), "~") or transformed_path
     -- Truncate
     local calc_result_length = function(truncate_len)
       local status = get_status(vim.api.nvim_get_current_buf())
