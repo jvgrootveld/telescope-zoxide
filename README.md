@@ -136,31 +136,25 @@ vim.keymap.set("n", "<leader>cd", t.extensions.zoxide.list)
   mappings = {
     default = {
       action = function(selection)
-        vim.cmd.edit(selection.path)
+        vim.cmd.cd(selection.path)
       end,
       after_action = function(selection)
-        print("Directory changed to " .. selection.path)
-      end
+        vim.notify("Directory changed to " .. selection.path)
+      end,
     },
     ["<C-s>"] = { action = z_utils.create_basic_command("split") },
     ["<C-v>"] = { action = z_utils.create_basic_command("vsplit") },
     ["<C-e>"] = { action = z_utils.create_basic_command("edit") },
-    ["<C-b>"] = {
-      keepinsert = true,
-      action = function(selection)
-        builtin.file_browser({ cwd = selection.path })
-      end
-    },
     ["<C-f>"] = {
       keepinsert = true,
       action = function(selection)
         builtin.find_files({ cwd = selection.path })
-      end
+      end,
     },
     ["<C-t>"] = {
       action = function(selection)
         vim.cmd.tcd(selection.path)
-      end
+      end,
     },
   }
 }
@@ -175,5 +169,23 @@ vim.keymap.set("n", "<leader>cd", t.extensions.zoxide.list)
 | `<C-s>` | Open selection in a split                            | `split <path>`                                   |
 | `<C-v>` | Open selection in a vertical split                   | `vsplit <path>`                                  |
 | `<C-e>` | Open selection in current window                     | `edit <path>`                                    |
-| `<C-b>` | Open selection in telescope's `builtin.file_browser` | `builtin.file_browser({ cwd = selection.path })` |
 | `<C-f>` | Open selection in telescope's `builtin.find_files`   | `builtin.find_files({ cwd = selection.path })`   |
+
+## Extensions
+
+### Open Selection in Telescope File Browser
+
+This action requires installing the [Telescope file browser extension](https://github.com/nvim-telescope/telescope-file-browser.nvim). You can register this mapping by adding the following to your config:
+
+```lua
+{
+  mappings = {
+    ["<C-b>"] = {
+      keepinsert = true,
+      action = function(selection)
+        require("telescope").extensions.file_browser.file_browser({ cwd = selection.path })
+      end
+    },
+  }
+}
+```
