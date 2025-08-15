@@ -100,6 +100,7 @@ t.setup({
   extensions = {
     zoxide = {
       prompt_title = "[ Walking on the shoulders of TJ ]",
+      list_command = "zoxide query --list --score --all",
       mappings = {
         default = {
           after_action = function(selection)
@@ -189,3 +190,13 @@ This action requires installing the [Telescope file browser extension](https://g
   }
 }
 ```
+
+## Troubleshooting
+
+### Slow listing or empty listing/timeout
+
+zoxides query command can be quiet slow when working with remote storage [Issue
+#406](https://github.com/ajeetdsouza/zoxide/issues/406). In this case a
+workaround is to use the environment variale `_ZO_EXCLUDE_DIRS` or
+`list_command= "zoxide query --list --score --all"` in the config of Telescope
+Zoxide.
